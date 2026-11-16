@@ -877,7 +877,7 @@ for (const auto &path : m_paths) {
 
             ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.interface"_unlocalized, "hex.builtin.setting.interface.window"_unlocalized, "hex.builtin.setting.interface.randomize_window_title"_unlocalized, false);
 
-            ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.interface"_unlocalized, "hex.builtin.setting.interface.window"_unlocalized, "hex.builtin.setting.interface.restore_window_pos"_unlocalized, false);
+            ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.interface"_unlocalized, "hex.builtin.setting.interface.window"_unlocalized, "hex.builtin.setting.interface.restore_window_pos"_unlocalized, true);
             ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.interface"_unlocalized, "hex.builtin.setting.interface.window"_unlocalized, "hex.builtin.setting.interface.show_task_finish_notification"_unlocalized, true)
                 .setTooltip("hex.builtin.setting.interface.show_task_finish_notification.desc"_unlocalized);
 

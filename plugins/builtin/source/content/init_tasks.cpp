@@ -116,7 +116,7 @@ namespace hex::plugin::builtin {
             bool multiWindowEnabled = ContentRegistry::Settings::read<bool>("hex.builtin.setting.interface"_unlocalized, "hex.builtin.setting.interface.multi_windows"_unlocalized, false);
             ImHexApi::System::impl::setMultiWindowMode(multiWindowEnabled);
 
-            bool restoreWindowPos = ContentRegistry::Settings::read<bool>("hex.builtin.setting.interface"_unlocalized, "hex.builtin.setting.interface.restore_window_pos"_unlocalized, false);
+            bool restoreWindowPos = ContentRegistry::Settings::read<bool>("hex.builtin.setting.interface"_unlocalized, "hex.builtin.setting.interface.restore_window_pos"_unlocalized, true);
 
             if (restoreWindowPos) {
                 ImHexApi::System::InitialWindowProperties properties = {};
@@ -124,10 +124,14 @@ namespace hex::plugin::builtin {
                 properties.maximized = ContentRegistry::Settings::read<bool>("hex.builtin.setting.interface"_unlocalized, "hex.builtin.setting.interface.window.maximized"_untranslated, false);
                 properties.x       = ContentRegistry::Settings::read<int>("hex.builtin.setting.interface"_unlocalized, "hex.builtin.setting.interface.window.x"_untranslated, 0);
                 properties.y       = ContentRegistry::Settings::read<int>("hex.builtin.setting.interface"_unlocalized, "hex.builtin.setting.interface.window.y"_untranslated, 0);
-                properties.width   = ContentRegistry::Settings::read<int>("hex.builtin.setting.interface"_unlocalized, "hex.builtin.setting.interface.window.width"_untranslated, 0);
-                properties.height  = ContentRegistry::Settings::read<int>("hex.builtin.setting.interface"_unlocalized, "hex.builtin.setting.interface.window.height"_untranslated, 0);
+                const auto width   = ContentRegistry::Settings::read<int>("hex.builtin.setting.interface"_unlocalized, "hex.builtin.setting.interface.window.width"_untranslated, 0);
+                const auto height  = ContentRegistry::Settings::read<int>("hex.builtin.setting.interface"_unlocalized, "hex.builtin.setting.interface.window.height"_untranslated, 0);
 
-                ImHexApi::System::impl::setInitialWindowProperties(properties);
+                if (width > 0 && height > 0) {
+                    properties.width = width;
+                    properties.height = height;
+                    ImHexApi::System::impl::setInitialWindowProperties(properties);
+                }
             }
 
             return true;

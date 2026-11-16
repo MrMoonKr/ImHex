@@ -1,0 +1,16 @@
+{
+    "cmake.useCMakePresets":  "always",
+    "cmake.configureOnOpen":  true,
+    "cmake.debugConfig": {
+        "type": "cppvsdbg",
+        "cwd": "${workspaceFolder}/build/vs2022-relwithdebinfo",
+        "console": "integratedTerminal",
+        "symbolSearchPath": "${workspaceFolder}/build/vs2022-relwithdebinfo;${workspaceFolder}/build/vs2022-relwithdebinfo/plugins",
+        "environment": [
+            {
+                "name": "PATH",
+                "value": "${workspaceFolder}/build/vs2022-relwithdebinfo;${workspaceFolder}/build/vs2022-relwithdebinfo/plugins;${workspaceFolder}/build/vs2022-relwithdebinfo/vcpkg_installed/x64-windows-msvc/bin;${env:PATH}"
+            }
+        ]
+    }
+}

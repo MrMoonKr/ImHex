@@ -123,7 +123,11 @@ namespace hex {
             }
         });
 
-        EventDPIChanged::post(1.0F, ImHexApi::System::getGlobalScale());
+        // Restored dimensions are already in window coordinates; scaling them
+        // again makes the window grow on every launch on high-DPI displays.
+        const auto scale = ImHexApi::System::getGlobalScale();
+        const auto initialScale = ImHexApi::System::getInitialWindowProperties().has_value() ? scale : 1.0F;
+        EventDPIChanged::post(initialScale, scale);
     }
 
     void Window::setupEmergencyPopups() {
@@ -233,6 +237,12 @@ namespace hex {
     void Window::loop() {
         using namespace std::literals::chrono_literals;
 
+        if (const auto properties = ImHexApi::System::getInitialWindowProperties(); properties.has_value() && properties->maximized) {
+            // Install native decorations before maximizing so the OS computes
+            // the correct work-area bounds for the restored window.
+            this->fullFrame();
+            glfwMaximizeWindow(m_window);
+        }
         glfwShowWindow(m_window);
 
         double returnToIdleTime = 5.0;
@@ -1058,10 +1068,6 @@ namespace hex {
         #endif
 
         configureGLFW();
-
-        if (initialWindowProperties.has_value()) {
-            glfwWindowHint(GLFW_MAXIMIZED, initialWindowProperties->maximized);
-        }
 
         int monitorX = 0, monitorY = 0;
         int monitorWidth = std::numeric_limits<int>::max(), monitorHeight = std::numeric_limits<int>::max();

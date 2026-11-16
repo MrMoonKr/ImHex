@@ -1,0 +1,35 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "ImHex: configure RelWithDebInfo",
+            "type": "process",
+            "command": "cmake",
+            "args": [
+                "--preset", "windows-local"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": [],
+            "detail": "Uses the local MSVC environment in CMakeUserPresets.json."
+        },
+        {
+            "label": "ImHex: build RelWithDebInfo",
+            "type": "process",
+            "command": "cmake",
+            "args": [
+                "--build", "--preset", "windows-local"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "dependsOn": "ImHex: configure RelWithDebInfo",
+            "problemMatcher": "$msCompile",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        }
+    ]
+}
