@@ -1268,11 +1268,16 @@ namespace hex::plugin::builtin {
 
                 menu::menuSeparator();
 
-                if (menu::menuItem("hex.builtin.view.hex_editor.menu.edit.jump_to.curr_pattern"_lang, Shortcut::None, false, selection.has_value() && ContentRegistry::PatternLanguage::getRuntime().getCreatedPatternCount() > 0)) {
-                    auto patterns = ContentRegistry::PatternLanguage::getRuntime().getPatternsAtAddress(selection->getStartAddress());
+                {
+                    std::unique_lock runtimeLock(ContentRegistry::PatternLanguage::getRuntimeLock(), std::try_to_lock);
+                    const bool canJumpToPattern = runtimeLock.owns_lock() && selection.has_value() &&
+                        ContentRegistry::PatternLanguage::getRuntime().getCreatedPatternCount() > 0;
+                    if (menu::menuItem("hex.builtin.view.hex_editor.menu.edit.jump_to.curr_pattern"_lang, Shortcut::None, false, canJumpToPattern)) {
+                        auto patterns = ContentRegistry::PatternLanguage::getRuntime().getPatternsAtAddress(selection->getStartAddress());
 
-                    if (!patterns.empty())
-                        RequestJumpToPattern::post(patterns.front());
+                        if (!patterns.empty())
+                            RequestJumpToPattern::post(patterns.front());
+                    }
                 }
             },
             [] { return ImHexApi::Provider::isValid() && ImHexApi::HexEditor::isSelectionValid() && ImHexApi::HexEditor::getSelection()->getSize() <= sizeof(u64); },

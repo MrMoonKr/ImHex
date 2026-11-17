@@ -166,3 +166,19 @@ endif ()
 include(CheckTypeSize)
 check_type_size(time_t TIME_T_SIZE)
 target_compile_definitions(builtin PRIVATE TIME_T_SIZE=${TIME_T_SIZE})
+
+option(IMHEX_BUILTIN_BUILD_CHECKS "Build built-in pattern hover regression checks" OFF)
+if(IMHEX_BUILTIN_BUILD_CHECKS)
+    add_executable(pattern_hover_checks
+        tests/pattern_hover_checks.cpp
+        source/content/views/view_pattern_editor.cpp
+        source/content/text_highlighting/pattern_language.cpp
+    )
+    target_include_directories(pattern_hover_checks PRIVATE include)
+    target_link_libraries(pattern_hover_checks PRIVATE libimhex ui fonts libromfs-builtin plcli libpl-gen)
+    target_compile_definitions(pattern_hover_checks PRIVATE IMHEX_PROJECT_NAME="pattern-hover-checks")
+    if(MSVC)
+        target_compile_options(pattern_hover_checks PRIVATE /bigobj)
+    endif()
+    addIncludesFromLibrary(pattern_hover_checks libpl)
+endif()

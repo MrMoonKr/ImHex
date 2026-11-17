@@ -2528,6 +2528,12 @@ namespace hex::plugin::builtin {
             if (!m_parentHighlightingEnabled)
                 return result;
 
+            // Evaluation rebuilds the flattened pattern tree on a worker thread.
+            // Keep both the lookup and the returned pattern pointers protected.
+            std::unique_lock runtimeLock(ContentRegistry::PatternLanguage::getRuntimeLock(), std::try_to_lock);
+            if (!runtimeLock.owns_lock())
+                return result;
+
             const auto &runtime = ContentRegistry::PatternLanguage::getRuntime();
 
             const auto hoveredRegion = Region { .address=address, .size=size };
