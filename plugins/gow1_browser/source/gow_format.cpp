@@ -138,17 +138,20 @@ namespace hex::plugin::gow1::format {
     std::vector<TocRecord> parseToc(std::span<const std::uint8_t> data) {
         if (data.size() > MetadataLimit) throw FormatError("TOC exceeds the 16 MiB budget");
         // GoW II starts with a count; GoW I starts with an ASCII filename.
+        if (data.size() == 12 && std::ranges::all_of(data, [](auto byte) { return byte == 0; })) return {};
         if (data.size() < 24 || data[0] < 0x21 || data[0] >= 0x7f || data[2] == 0)
             throw FormatError("Expected a GoW I TOC; GoW II is not supported by this browser");
         std::vector<TocRecord> records;
-        for (std::size_t position = 0; position + 24 <= data.size(); position += 24) {
-            if (data[position] == 0) return records; // stale data after this record is ignored
+        for (std::size_t position = 0; position + 12 <= data.size(); position += 24) {
+            const auto nameBytes = data.subspan(position, 12);
+            if (position + 12 == data.size() && std::ranges::all_of(nameBytes, [](auto byte) { return byte == 0; })) return records;
+            requireRange(position, 24, data.size());
             if (records.size() >= 100000) throw FormatError("TOC exceeds the 100,000 location budget");
             const auto *p = data.data() + position;
-            auto name = nameOf(data.subspan(position, 12), true);
+            auto name = nameOf(nameBytes, true);
             records.push_back({ std::move(name), le32(p + 12), le32(p + 16), le32(p + 20), records.size() });
         }
-        throw FormatError("GoW I TOC has no terminating empty record");
+        throw FormatError("GoW I TOC must end with a 12-byte NUL name without record data");
     }
 
     Catalog readCatalog(const Read &read, Offset size, const std::string &filename) {
@@ -163,7 +166,7 @@ namespace hex::plugin::gow1::format {
         result.toc = *toc;
         for (const auto &record : parseToc(metadata(read, toc->offset, toc->size))) {
             Container container;
-            container.region = { record.name, 0, record.size };
+            container.region = { record.name.empty() ? "<unnamed>" : record.name, 0, record.size };
             container.recordIndex = record.index;
             container.wad = isWad(record.name);
             const auto pakName = "PART" + std::to_string(Offset(record.pak) + 1) + ".PAK";

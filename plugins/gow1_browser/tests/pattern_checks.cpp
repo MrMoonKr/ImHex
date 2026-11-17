@@ -1,6 +1,7 @@
 #include <gow_format.hpp>
 #include <pl/pattern_language.hpp>
 #include <pl/core/errors/error.hpp>
+#include <pl/patterns/pattern.hpp>
 
 #include <cstring>
 #include <iostream>
@@ -28,6 +29,32 @@ namespace {
             for (const auto &error : runtime.getCompileErrors()) std::cerr << error.format() << '\n';
             if (runtime.getEvalError()) std::cerr << runtime.getEvalError()->what() << '\n';
             return false;
+        }
+        if (success && name == "toc.hexpat") {
+            Bytes bytes(static_cast<std::size_t>(size));
+            read(0, bytes);
+            const auto expectedRecords = parseToc(bytes);
+            const auto &patterns = runtime.getPatterns();
+            const auto find = [&](const std::string &variable) -> const pl::ptrn::Pattern* {
+                for (const auto &pattern : patterns) if (pattern->getVariableName() == variable) return pattern.get();
+                return nullptr;
+            };
+            const auto *records = find("records");
+            const auto *array = dynamic_cast<const pl::ptrn::IIterable*>(records);
+            const auto *terminator = find("terminator");
+            if (!records || !array || array->getEntryCount() != expectedRecords.size() || records->getOffset() != 0 ||
+                records->getSize() != expectedRecords.size() * 24 || !terminator || terminator->getOffset() != expectedRecords.size() * 24 || terminator->getSize() != 12) {
+                std::cerr << "toc.hexpat must expose all TOC records as one persistent records array, followed by the terminator\n";
+                return false;
+            }
+            for (std::size_t i = 0; i < expectedRecords.size(); ++i) {
+                const auto record = array->getEntry(i);
+                if (record->getOffset() != i * 24 || record->getSize() != 24) {
+                    std::cerr << "TOC array element has an incorrect byte range\n";
+                    return false;
+                }
+            }
+            std::cout << "TOC array verified: " << array->getEntryCount() << " records / " << records->getSize() << " bytes\n";
         }
         return true;
     }
@@ -77,9 +104,19 @@ int main(int argc, char **argv) {
             ok &= evaluate("raw.hexpat", Bytes(100));
             ok &= evaluate("tag.hexpat", Bytes(32));
             ok &= evaluate("tag.hexpat", Bytes(31), false);
-            Bytes toc(72); std::memcpy(toc.data(), "A.WAD", 5); std::memcpy(toc.data() + 48, "STALE.WAD", 9);
+            Bytes toc(36); std::memcpy(toc.data(), "A.WAD", 5);
             ok &= evaluate("toc.hexpat", toc);
             ok &= evaluate("toc.hexpat", Bytes(toc.begin(), toc.begin() + 24), false);
+            Bytes copies(132);
+            std::memcpy(copies.data(), "A.WAD", 5); put(copies, 16, 64);
+            std::memcpy(copies.data() + 24, "A.WAD", 5); put(copies, 40, 64); put(copies, 44, 1);
+            std::memcpy(copies.data() + 48, "B.VPK", 5); put(copies, 64, 128); put(copies, 68, 2);
+            put(copies, 88, 256); put(copies, 92, 3); // NUL name, followed by actual record data
+            std::memcpy(copies.data() + 96, "C.WAD", 5);
+            ok &= evaluate("toc.hexpat", copies);
+            ok &= evaluate("toc.hexpat", Bytes(copies.begin(), copies.begin() + 73), false);
+            auto badTerminator = copies; badTerminator.back() = 1;
+            ok &= evaluate("toc.hexpat", badTerminator, false);
             Bytes wad(80); wad[0] = 24; put(wad, 4, 0xffffffff); wad[32] = 30; put(wad, 36, 4); put(wad, 64, 3);
             ok &= evaluate("wad.hexpat", wad);
             ok &= evaluate("wad.hexpat", Bytes(wad.begin(), wad.end() - 1), false);

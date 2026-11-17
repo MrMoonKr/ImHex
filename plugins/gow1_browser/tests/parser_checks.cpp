@@ -84,12 +84,11 @@ namespace {
     }
 
     Bytes tocBytes() {
-        Bytes toc(24 * 6);
+        Bytes toc(24 * 4 + 12);
         text(toc, 0, "A.WAD"); put(toc, 16, 48);
         text(toc, 24, "A.WAD"); put(toc, 24 + 16, 48); put(toc, 24 + 20, 1);
         text(toc, 48, "A.WAD"); put(toc, 48 + 16, 64); put(toc, 48 + 20, 2);
         text(toc, 72, "B.WAD"); put(toc, 72 + 12, 8); put(toc, 72 + 16, 32);
-        text(toc, 120, "STALE.WAD");
         return toc;
     }
 
@@ -109,6 +108,16 @@ namespace {
         auto records = parseToc(toc);
         check(records.size() == 4 && records[1].index == 1 && records[1].sector == 1, "TOC copies or terminator lost");
         check(records[2].size == 64, "TOC same name different size lost");
+        auto interiorNul = toc;
+        std::fill_n(interiorNul.begin() + 24, 12, 0);
+        const auto withEmptyName = parseToc(interiorNul);
+        check(withEmptyName.size() == 4 && withEmptyName[1].name.empty() && withEmptyName[1].size == 48 && withEmptyName[2].name == "A.WAD",
+              "NUL name followed by record data must not terminate the TOC");
+        std::fill_n(interiorNul.begin() + 24, 24, 0);
+        check(parseToc(interiorNul).size() == 4, "Even a fully empty interior record must not terminate before EOF");
+        auto invalidTerminator = toc; invalidTerminator.back() = 1;
+        rejects([&] { parseToc(invalidTerminator); }, "Partially NUL final name accepted as a terminator");
+        check(parseToc(Bytes(12)).empty(), "Empty TOC with a 12-byte terminator");
         auto truncated = Bytes(toc.begin(), toc.begin() + 96);
         rejects([&] { parseToc(truncated); }, "Unterminated TOC accepted");
         truncated[0] = 0xff;
