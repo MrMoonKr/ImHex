@@ -10,6 +10,7 @@
 using namespace hex;
 using namespace hex::plugin::gow1;
 
+// name, author, description
 IMHEX_PLUGIN_SETUP("GoW1 Asset Browser", "ImHex contributors", "God of War I (PS2) ISO / WAD asset browser") {
     LocalizationManager::addLanguages(romfs::get("lang/languages.json").string(), [](const std::filesystem::path &path) {
         return romfs::get(path).string();

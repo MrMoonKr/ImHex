@@ -32,13 +32,13 @@ namespace hex::plugin::gow1::format {
         [[nodiscard]] Offset size() const { return m_size; }
         [[nodiscard]] const std::filesystem::path &path() const { return m_path; }
     private:
-        std::filesystem::path m_path;
-        std::ifstream m_file;
-        Offset m_size = 0;
-        std::mutex m_mutex;
-        std::array<std::uint8_t, 65536> m_cache{};
-        Offset m_cacheOffset = 0;
-        std::size_t m_cacheSize = 0;
+        std::filesystem::path   m_path ;
+        std::ifstream           m_file ;
+        Offset                  m_size = 0 ;
+        std::mutex              m_mutex ;
+        std::array<std::uint8_t, 65536> m_cache{} ;
+        Offset                  m_cacheOffset = 0 ;
+        std::size_t             m_cacheSize = 0 ;
     };
 
     struct Region {
@@ -48,20 +48,20 @@ namespace hex::plugin::gow1::format {
     };
 
     struct TocRecord {
-        std::string name;
-        std::uint32_t pak = 0;
-        std::uint32_t size = 0;
-        std::uint32_t sector = 0;
-        std::size_t index = 0;
+        std::string     name;
+        std::uint32_t   pak = 0;
+        std::uint32_t   size = 0;
+        std::uint32_t   sector = 0;
+        std::size_t     index = 0;
     };
 
     struct Tag {
-        std::uint16_t tag = 0;
-        std::uint16_t flags = 0;
-        std::uint32_t declaredSize = 0;
-        std::string name;
-        Offset headerOffset = 0;
-        Offset size = 0;
+        std::uint16_t   tag = 0;
+        std::uint16_t   flags = 0;
+        std::uint32_t   declaredSize = 0;
+        std::string     name;
+        Offset          headerOffset = 0;
+        Offset          size = 0;
         std::optional<std::uint32_t> type;
         std::optional<std::size_t> parent;
         std::string shape;
@@ -70,12 +70,12 @@ namespace hex::plugin::gow1::format {
     };
 
     struct Container {
-        Region region;
-        std::size_t recordIndex = 0;
-        bool wad = false;
+        Region          region;
+        std::size_t     recordIndex = 0;
+        bool            wad = false;
         std::vector<Tag> tags;
-        std::string error;
-        bool available = true;
+        std::string     error;
+        bool            available = true;
     };
 
     struct Catalog {
